@@ -1,8 +1,3 @@
-// ==============================
-// FIREBASE CONFIG
-// Replace with your Firebase project config
-// ==============================
-
 const firebaseConfig = {
     apiKey: "AIzaSyDT8P_hSxZon_HYD7ODiZ_u9YMmnhiEmYg",
     authDomain: "globaltracker-c7cc5.firebaseapp.com",
@@ -15,167 +10,88 @@ const firebaseConfig = {
   };
 
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.database();
 
+let map = L.map("map").setView([20,0],2);
 
-// ==============================
-// MAP INITIALIZATION (Leaflet)
-// ==============================
-
-let map = L.map('map').setView([20, 0], 2);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+ attribution:"© OpenStreetMap"
 }).addTo(map);
 
+let markers={};
 
-// Store markers for users
-let markers = {};
+function login(){
 
+const email=document.getElementById("email").value;
+const password=document.getElementById("password").value;
 
-// ==============================
-// LOGIN FUNCTION
-// ==============================
-
-function login() {
-
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  auth.signInWithEmailAndPassword(email, password)
-  .then(() => {
-    alert("Login successful");
-  })
-  .catch(err => {
-    alert(err.message);
-  });
+auth.signInWithEmailAndPassword(email,password);
 
 }
 
+function register(){
 
-// ==============================
-// REGISTER FUNCTION
-// ==============================
+const email=document.getElementById("email").value;
+const password=document.getElementById("password").value;
 
-function register() {
-
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  auth.createUserWithEmailAndPassword(email, password)
-  .then(() => {
-    alert("Account created");
-  })
-  .catch(err => {
-    alert(err.message);
-  });
+auth.createUserWithEmailAndPassword(email,password);
 
 }
 
+auth.onAuthStateChanged(user=>{
 
-// ==============================
-// LOGOUT
-// ==============================
+if(user){
 
-function logout(){
-  auth.signOut();
+startTracking(user.uid);
+listenLocations();
+
 }
-
-
-// ==============================
-// AUTH STATE LISTENER
-// ==============================
-
-auth.onAuthStateChanged(user => {
-
-  if(user){
-
-    console.log("User logged in:", user.uid);
-
-    startLocationSharing(user.uid);
-    listenForLocations();
-
-  }else{
-
-    console.log("User logged out");
-
-  }
 
 });
 
+function startTracking(uid){
 
-// ==============================
-// SHARE USER LOCATION
-// ==============================
+navigator.geolocation.watchPosition(pos=>{
 
-function startLocationSharing(userId){
+const lat=pos.coords.latitude;
+const lng=pos.coords.longitude;
 
-  if(!navigator.geolocation){
-    alert("Geolocation not supported");
-    return;
-  }
+db.ref("locations/"+uid).set({
+lat:lat,
+lng:lng,
+time:Date.now()
+});
 
-  navigator.geolocation.watchPosition(position => {
-
-    const lat = position.coords.latitude;
-    const lng = position.coords.longitude;
-
-    console.log("Location:", lat, lng);
-
-    db.ref("locations/" + userId).set({
-      lat: lat,
-      lng: lng,
-      timestamp: Date.now()
-    });
-
-  },
-  error => {
-    console.error(error);
-  },
-  {
-    enableHighAccuracy: true,
-    maximumAge: 0,
-    timeout: 5000
-  });
+});
 
 }
 
+function listenLocations(){
 
-// ==============================
-// LISTEN FOR LIVE LOCATIONS
-// ==============================
+db.ref("locations").on("value",snap=>{
 
-function listenForLocations(){
+const users=snap.val();
 
-  db.ref("locations").on("value", snapshot => {
+for(let id in users){
 
-    const users = snapshot.val();
+const lat=users[id].lat;
+const lng=users[id].lng;
 
-    if(!users) return;
+if(!markers[id]){
 
-    for(let id in users){
+markers[id]=L.marker([lat,lng]).addTo(map);
 
-      const lat = users[id].lat;
-      const lng = users[id].lng;
+}else{
 
-      if(!markers[id]){
+markers[id].setLatLng([lat,lng]);
 
-        markers[id] = L.marker([lat,lng])
-        .addTo(map)
-        .bindPopup("User: " + id);
+}
 
-      }else{
+}
 
-        markers[id].setLatLng([lat,lng]);
-
-      }
-
-    }
-
-  });
+});
 
 }
