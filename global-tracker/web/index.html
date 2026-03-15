@@ -1,0 +1,27 @@
+<html>
+<head>
+    <title>Global Tracker Login</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: Arial; text-align:center; background:#111; color:white; }
+        #map { height:500px; width:90%; margin:auto; margin-top:20px; }
+        input, button { padding: 10px; margin:5px; }
+    </style>
+</head>
+<body>
+    <h2>Login to Share Location</h2>
+    <input id="email" placeholder="Email">
+    <input id="password" placeholder="Password" type="password">
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
+
+    <div id="map"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
