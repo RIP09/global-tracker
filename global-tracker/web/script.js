@@ -15,9 +15,24 @@ const firebaseConfig = {
   const analytics = getAnalytics(app);
 </script>
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+firebase.database().ref("locations").on("value", snapshot => {
+
+  const data = snapshot.val();
+
+  for (let id in data) {
+
+    const lat = data[id].lat;
+    const lng = data[id].lng;
+
+    if (!markers[id]) {
+      markers[id] = L.marker([lat, lng]).addTo(map);
+    } else {
+      markers[id].setLatLng([lat, lng]);
+    }
+
+  }
+
+});
 
 // ------------------ Leaflet Map ------------------
 let map;
